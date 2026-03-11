@@ -1,4 +1,3 @@
-[![Build Status](http://circleci-badges-max.herokuapp.com/img/jasonge27/picasso/1?token=65317b48c13e9567b12e5a8c52661d709d3f605e)](https://circleci.com/gh/jasonge27/picasso/1)
 <h1 align="center">PICASSO</h1>
 <h4 align="center">High Performance R and Python Library for Sparse Learning</h4>
 
@@ -48,10 +47,9 @@ The directory is organized as follows:
 * [__R-package__](R-package): R wrapper for the source code.
 * [__python-package__](python-package): Python wrapper for the source code.
 * [__tutorials__](tutorials): tutorials for using the code in R and Python.
-* [__profiling__](profiling): profiling the performance from R package.
 
 ## Introduction
-The pathwise coordinate optimization is undoubtedly one the of the most popular solvers for a large variety of sparse learning problems. By leveraging the solution sparsity through a simple but elegant algorithmic structure, it significantly boosts the computational performance in practice (Friedman et al., 2007). Some recent progresses in (Zhao et al., 2017; Li et al., 2017) establish theoretical guarantees to further justify its computational and statistical superiority for both convex and nonvoncex sparse learning, which makes it even more attractive to practitioners.
+The pathwise coordinate optimization is undoubtedly one the of the most popular solvers for a large variety of sparse learning problems. By leveraging the solution sparsity through a simple but elegant algorithmic structure, it significantly boosts the computational performance in practice (Friedman et al., 2007). Some recent progresses in (Zhao et al., 2017; Li et al., 2017) establish theoretical guarantees to further justify its computational and statistical superiority for both convex and nonconvex sparse learning, which makes it even more attractive to practitioners.
 
 We recently developed a new library named PICASSO, which implements a unified toolkit of pathwise coordinate optimization for solving a large class of convex and nonconvex regularized sparse learning problems. Efficient active set selection strategies are provided to guarantee superior statistical and computational preference.
 
@@ -61,7 +59,7 @@ The pathwise coordinate optimization framework with 3 nested loops : (1) Warm st
 ![The pathwise coordinate optimization framework](https://raw.githubusercontent.com/jasonge27/picasso/master/tutorials/images/picasso_flow.png)
 
 ## Background
-There exists several R pakcages (such as ncvreg and glmnet) which implement state-of-the-art heuristic optimization algorithms for sparse learning. However they either lack support for nonconvex penalties or becomes very unstable when there are multi-colinear features. PICASSO combines pathwise coordinate optimization and multi-stage convex relaxation for nonconvex optimization and finds a 'good' local minimal which has provable statistical property.
+There exists several R packages (such as ncvreg and glmnet) which implement state-of-the-art heuristic optimization algorithms for sparse learning. However they either lack support for nonconvex penalties or becomes very unstable when there are multi-colinear features. PICASSO combines pathwise coordinate optimization and multi-stage convex relaxation for nonconvex optimization and finds a 'good' local minimal which has provable statistical property.
 
 ## Power of Nonconvex Penalties
 
@@ -72,7 +70,7 @@ L1 penalized regression (LASSO) is a useful tool for feature selection but it te
 > library(glmnet)
 > n <- 1000; p <- 1000; c <- 0.1
 > # n sample number, p dimension, c correlation parameter
-> X <- scale(matrix(rnorm(n*p),n,p)+c*rnorm(n))/sqrt(n-1)*sqrt(n) # n is smaple number,
+> X <- scale(matrix(rnorm(n*p),n,p)+c*rnorm(n))/sqrt(n-1)*sqrt(n) # n is sample number,
 > s <- 20  # sparsity level
 > true_beta <- c(runif(s), rep(0, p-s))
 > Y <- X%*%true_beta + rnorm(n)
@@ -84,7 +82,7 @@ L1 penalized regression (LASSO) is a useful tool for feature selection but it te
 
 Nonconvex penalties such as SCAD [1] and MCP [2] are statistically better but computationally harder. The solution for SCAD/MCP penalized linear model has much less estimation error than lasso but calculating the estimator involves non-convex optimization. With limited computation resource, we can only get a local optimum which probably lacks the good property of the global optimum.
 
-The PICASSO package [3, 4] solves non-convex optimization through multi-stage convex relaxation. Although we only find a local minimum, it can be proved that this local minimum does not lose the superior statistcal property of the global minimum. Multi-stage convex relaxation is also much more stable than other packages (see benchmark below).
+The PICASSO package [3, 4] solves non-convex optimization through multi-stage convex relaxation. Although we only find a local minimum, it can be proved that this local minimum does not lose the superior statistical property of the global minimum. Multi-stage convex relaxation is also much more stable than other packages (see benchmark below).
 
 Let's see PICASSO in action — the estimation error drops to **6.06%** using SCAD penalty from **16.41%** error produced by LASSO.
 
@@ -98,18 +96,13 @@ Let's see PICASSO in action — the estimation error drops to **6.06%** using SC
 
 
 ## Performance
-```bash
-$cd profiling
-$Rscript benchmark.R
-$python benchmark.py
-```
 
 ### R package
  - Sparse linear regression. picasso achieves similar timing and optimization performance to glmnet and ncvreg.
  - Sparse logistic regression. When using the l1 regularizer, picasso, glmnet and ncvreg achieves similar optimization performance. When using the nonconvex regularizers, picasso achieves significantly better optimization performance than ncvreg, especially in ill-conditioned cases.
  - Scaled sparse linear regression. Picasso significantly outperforms scalreg and flare in timing performance. In Table 5.3 in [tutorials/PICASSO.pdf](https://raw.githubusercontent.com/jasonge27/picasso/master/tutorials/PICASSO.pdf), picasso is 20 − 100 times faster and achieves smaller objective function values.
 
-Details of our benmarking process are documented in [tutorials/PICASSO.pdf](https://raw.githubusercontent.com/jasonge27/picasso/master/tutorials/PICASSO.pdf).
+Details of our benchmarking process are documented in [tutorials/PICASSO.pdf](https://raw.githubusercontent.com/jasonge27/picasso/master/tutorials/PICASSO.pdf).
 
 ![Performance_R](https://raw.githubusercontent.com/jasonge27/picasso/master/tutorials/images/performance_R.jpeg)
 
@@ -129,8 +122,10 @@ install.packages("picasso")
 
 - Installing from source code.
 ```bash
-$ git clone --recurse-submodules https://github.com/jasonge27/picasso.git
-$ cd picasso; make Rinstall
+$ git clone https://github.com/jasonge27/picasso.git
+$ cd picasso
+$ R CMD build R-package
+$ R CMD INSTALL picasso_1.5.tar.gz
 ```
 
 ### Installing Python package
@@ -138,8 +133,10 @@ There are two ways to install the picasso python package.
 - Installing from PyPi (recommended). ``pip install pycasso --user``.
 - Installing from source code.
  ```bash
- $git clone --recurse-submodules https://github.com/jasonge27/picasso.git
- $cd picasso; make Pyinstall
+ $ git clone https://github.com/jasonge27/picasso.git
+ $ cd picasso
+ $ mkdir -p build && cd build && cmake .. && make && cd ..
+ $ cd python-package && pip install .
  ```
 
 You can test if the package has been successfully installed by ``python -c "import pycasso; pycasso.test()" ``

@@ -65,7 +65,6 @@ picasso.logit <- function(X,
   scaled = .picasso_rescale_solution(beta.raw, out$intcpt, standardize, xinvc.vec, xm)
 
   runt = Sys.time()-begt
-  est$runt = out$runt
   est$beta = Matrix(scaled$beta)
   est$intercept = scaled$intercept
   est$lambda = lambda
