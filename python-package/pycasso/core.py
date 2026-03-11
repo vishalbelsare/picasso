@@ -232,7 +232,7 @@ class Solver:
         'beta': np.zeros((self.nlambda, self.num_feature), dtype='double'),
         'intercept': np.zeros(self.nlambda, dtype='double'),
         'ite_lamb': np.zeros(self.nlambda, dtype='int32'),
-        'size_act': np.zeros((self.nlambda, self.num_feature), dtype='int32'),
+        'size_act': np.zeros(self.nlambda, dtype='int32'),
         'df': np.zeros(self.nlambda, dtype='int32'),
         'train_time': np.zeros(self.nlambda, dtype='double'),
         'num_fit': np.zeros(1, dtype='int32'),
@@ -280,7 +280,7 @@ class Solver:
         self.result['beta'] = self.result['beta'][:nfit, :]
         self.result['intercept'] = self.result['intercept'][:nfit]
         self.result['ite_lamb'] = self.result['ite_lamb'][:nfit]
-        self.result['size_act'] = self.result['size_act'][:nfit, :]
+        self.result['size_act'] = self.result['size_act'][:nfit]
         self.result['train_time'] = self.result['train_time'][:nfit]
         self.nlambda = nfit
         self.lambdas = self.lambdas[:nfit]
