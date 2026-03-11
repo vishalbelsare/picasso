@@ -32,8 +32,6 @@ picasso.gaussian <- function(X,
     ))
   }
 
-  
-  res.sd = FALSE 
 
   design = .picasso_prepare_design(X, standardize)
   xx = design$xx
@@ -42,14 +40,8 @@ picasso.gaussian <- function(X,
 
   if (standardize) {
     ym = mean(Y)
-    y1 = Y-ym
-    if (res.sd){
-      sdy = sqrt(sum(y1^2)/(n-1))
-      yy = y1/sdy
-    } else {
-      sdy = 1
-      yy = y1
-    }
+    sdy = 1
+    yy = Y - ym
   } else {
     sdy = 1
     yy = Y
