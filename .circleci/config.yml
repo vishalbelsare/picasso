@@ -1,0 +1,14 @@
+# CircleCI is no longer used. CI has moved to GitHub Actions (.github/workflows/ci.yml).
+# This minimal config silences the "no configuration found" status check
+# until the CircleCI integration is removed from the repository.
+version: 2.1
+jobs:
+  noop:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - run: echo "CI has moved to GitHub Actions."
+workflows:
+  placeholder:
+    jobs:
+      - noop
