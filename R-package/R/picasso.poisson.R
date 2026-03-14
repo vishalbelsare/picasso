@@ -10,7 +10,8 @@ picasso.poisson <- function(X,
                           intercept = TRUE,
                           prec = 1e-4,
                           max.ite = 1e4,
-                          verbose = FALSE)
+                          verbose = FALSE,
+                          offset = NULL)
 {
   dims = .picasso_validate_design(X)
   n = dims$n
@@ -43,10 +44,11 @@ picasso.poisson <- function(X,
   gamma = method.info$gamma
   
   dfmax.int <- if (is.null(dfmax)) as.integer(-1) else as.integer(dfmax)
+  offset.vec <- if (is.null(offset)) rep(0.0, n) else as.double(offset)
 
   out = poisson_solver(yy, xx, lambda, nlambda, gamma,
               n, d, max.ite, prec, intercept = intercept, verbose,
-              method.flag, dfmax.int)
+              method.flag, dfmax.int, offset.vec)
   
   # truncate to actual number of lambdas fit (early stopping)
   num.fit = out$num.fit
@@ -71,6 +73,13 @@ picasso.poisson <- function(X,
   est$ite =out$ite
   est$verbose = verbose
   est$runtime = runt
+
+  off_arg <- if (is.null(offset)) NULL else offset.vec
+  est$nulldev <- .picasso_null_deviance(as.numeric(Y), "poisson", offset = off_arg)
+  fit_dev <- .picasso_fit_deviance(as.numeric(Y), X, as.matrix(est$beta),
+                                   est$intercept, "poisson", offset = off_arg)
+  est$dev.ratio <- pmax(0, pmin(1, 1 - fit_dev / est$nulldev))
+
   class(est) = "poisson"
   return(est)
 }
@@ -90,7 +99,8 @@ coef.poisson <- function(object, lambda.idx = c(1:3), beta.idx = c(1:3), ...)
   .picasso_extract_coef(object, lambda.idx, beta.idx)
 }
 
-predict.poisson <- function(object, newdata, lambda.idx = c(1:3), p.pred.idx = c(1:5), ...)
+predict.poisson <- function(object, newdata, lambda.idx = c(1:3), p.pred.idx = c(1:5),
+                            type = "response", s = NULL, ...)
 {
   .picasso_predict(
     object,
@@ -98,6 +108,8 @@ predict.poisson <- function(object, newdata, lambda.idx = c(1:3), p.pred.idx = c
     lambda.idx,
     p.pred.idx,
     default_response_idx = c(1:5),
-    transform = exp
+    transform = exp,
+    type = type,
+    s = s
   )
 }

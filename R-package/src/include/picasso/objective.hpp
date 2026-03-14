@@ -3,7 +3,21 @@
 
 #include <algorithm>
 #include <cmath>
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#endif
+
 #include <Eigen/Dense>
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
 #include <vector>
 
 #include <ctime>
@@ -110,6 +124,8 @@ class ObjFunction {
   Eigen::ArrayXd gr;
   Eigen::ArrayXd Xb;
 
+  Eigen::ArrayXd m_offset;  // per-observation offset (default zeros)
+
   ModelParam model_param;
 
   double deviance;
@@ -126,6 +142,9 @@ class ObjFunction {
     Xb.resize(n);
     Xb.setZero();
 
+    m_offset.resize(n);
+    m_offset.setZero();
+
     std::copy(y, y + n, Y.data());
 
     X.resize(n, d);
@@ -136,6 +155,11 @@ class ObjFunction {
         for (int j = 0; j < d; j++) X(i, j) = xmat[i * d + j];
       }
   };
+
+  void set_offset(const double *off, int len) {
+    m_offset.resize(len);
+    std::copy(off, off + len, m_offset.data());
+  }
 
   int get_dim() { return d; }
   int get_sample_num() { return n; }

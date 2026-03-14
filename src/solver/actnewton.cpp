@@ -143,9 +143,8 @@ void ActNewtonSolver::solve() {
         // update p and w
         m_obj->update_auxiliary();
 
-        if (terminate_loop_level_1) break;
-
-        // check stopping criterion 2: active set change
+        // check for new active variables (must run even when active set
+        // is empty or converged, otherwise variables never get activated)
         bool new_active_idx = false;
         for (int k = 0; k < d; k++)
           if (actset_indcat[k] == 0) {
@@ -157,7 +156,7 @@ void ActNewtonSolver::solve() {
             }
           }
 
-        if (!new_active_idx) break;
+        if (!new_active_idx && terminate_loop_level_1) break;
       }
 
       if (loopcnt_level_0 == 1) {

@@ -40,10 +40,8 @@ picasso.gaussian <- function(X,
 
   if (standardize) {
     ym = mean(Y)
-    sdy = 1
     yy = Y - ym
   } else {
-    sdy = 1
     yy = Y
   }
 
@@ -65,13 +63,6 @@ picasso.gaussian <- function(X,
   out = gaussian_solver(yy, xx, lambda, nlambda, gamma, n, d, max.ite, prec, verbose,
                        intercept, method.flag, type.gaussian, dfmax.int)
 
-  if (out$err == 1) {
-    stop("Parameters are too dense. Please choose larger `lambda`.")
-  }
-  if (out$err == 2) {
-    warning("`df` may be too small. You may choose larger `df`.", call. = FALSE)
-  }
-
   # truncate to actual number of lambdas fit (early stopping)
   num.fit = out$num.fit
   if (num.fit < nlambda) {
@@ -84,8 +75,8 @@ picasso.gaussian <- function(X,
 
   est$beta = Matrix(scaled$beta)
   est$intercept = if (standardize) scaled$intercept + ym else scaled$intercept
-  est$lambda = lambda * sdy
-  est$df = colSums(beta.raw != 0)
+  est$lambda = lambda
+  est$df = as.integer(colSums(beta.raw != 0))
 
   est$ite = out$ite[1:nlambda]
 
@@ -97,6 +88,11 @@ picasso.gaussian <- function(X,
   est$alg = paste("actgd", type.gaussian, sep = "-")
   est$verbose = verbose
   est$runtime = runt
+
+  est$nulldev <- .picasso_null_deviance(as.numeric(Y), "gaussian")
+  fit_dev <- .picasso_fit_deviance(as.numeric(Y), X, as.matrix(est$beta), est$intercept, "gaussian")
+  est$dev.ratio <- pmax(0, pmin(1, 1 - fit_dev / est$nulldev))
+
   class(est) = "gaussian"
   return(est)
 }
@@ -116,13 +112,16 @@ coef.gaussian <- function(object, lambda.idx = c(1:3), beta.idx = c(1:3), ...)
   .picasso_extract_coef(object, lambda.idx, beta.idx)
 }
 
-predict.gaussian <- function(object, newdata, lambda.idx = c(1:3), Y.pred.idx = c(1:5), ...)
+predict.gaussian <- function(object, newdata, lambda.idx = c(1:3), Y.pred.idx = c(1:5),
+                             type = "response", s = NULL, ...)
 {
   .picasso_predict(
     object,
     newdata,
     lambda.idx,
     Y.pred.idx,
-    default_response_idx = c(1:5)
+    default_response_idx = c(1:5),
+    type = type,
+    s = s
   )
 }

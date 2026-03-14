@@ -110,6 +110,8 @@ class ObjFunction {
   Eigen::ArrayXd gr;
   Eigen::ArrayXd Xb;
 
+  Eigen::ArrayXd m_offset;  // per-observation offset (default zeros)
+
   ModelParam model_param;
 
   double deviance;
@@ -126,6 +128,9 @@ class ObjFunction {
     Xb.resize(n);
     Xb.setZero();
 
+    m_offset.resize(n);
+    m_offset.setZero();
+
     std::copy(y, y + n, Y.data());
 
     X.resize(n, d);
@@ -137,12 +142,17 @@ class ObjFunction {
       }
   };
 
+  void set_offset(const double *off, int len) {
+    m_offset.resize(len);
+    std::copy(off, off + len, m_offset.data());
+  }
+
   int get_dim() { return d; }
   int get_sample_num() { return n; }
 
   double get_grad(int idx) { return gr[idx]; };
 
-  // fabs(null fvalue - saturated fvalue)
+  // initial |eval()| used as a scale reference for convergence thresholds
   double get_deviance() { return (deviance); };
 
   double get_model_coef(int idx) {

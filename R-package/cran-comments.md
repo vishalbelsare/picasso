@@ -1,6 +1,6 @@
 ## Resubmission
 
-This is a resubmission of `picasso` (version 1.4.1), which was archived on CRAN on 2025-02-09.
+This is a resubmission of `picasso` (version 1.5), which was archived on CRAN on 2025-02-09.
 
 ### Changes addressing previously reported CRAN issues
 
