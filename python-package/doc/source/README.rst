@@ -1,81 +1,88 @@
-Picasso Python Package
-======================
-PICASSO: Penalized Generalized Linear Model Solver - Unleash the Power of Non-convex Penalty
+Pycasso - Python Interface for PICASSO
+=======================================
 
-Unleash the power of nonconvex penalty
---------------------------------------
-L1 penalized regression (LASSO) is great for feature selection. However when you use LASSO in
-very noisy setting, especially when some columns in your data have strong colinearity, LASSO
-tends to give biased estimator due to the penalty term. As demonstrated in the example below,
-the lowest estimation error among all the lambdas computed is as high as **16.41%**.
+**PICASSO**: Penalized Generalized Linear Model Solver - Unleash the Power of Non-convex Penalty
+
+Pycasso provides a Python interface to the PICASSO C++ solver for fitting sparse
+generalized linear models with L1 (Lasso), MCP, and SCAD penalties via pathwise
+coordinate optimization.
+
+Features
+--------
+
+- **Families**: Gaussian (linear), Binomial (logistic), Poisson, Sqrt-Lasso
+- **Penalties**: L1 (Lasso), MCP, SCAD
+- **Standardization**: Automatic design matrix standardization with proper coefficient rescaling
+- **Gaussian solvers**: Naive update and covariance update
+- **Early stopping**: ``dfmax`` parameter to stop when too many coefficients become nonzero
+- **Intercept**: Optional intercept term with correct initialization for all families
 
 Requirements
 ------------
 
-- Linux or MacOS
-
-**Windows User:** It may take lots of effort to build on Windows. One way to do it is using mingw/mingw64.
-Be careful of issues like the system bits and environment variables.
-Once the correct make tools and g++ are setted up, you can install the package from suorce with the following instruction.
-
+- Linux or macOS
+- Python 3
+- NumPy, SciPy
 
 Installation
 ------------
 
-In the following process, you may need to be root (``sudo``).
+Install from PyPI::
 
-Install from source file (Github) with Makefile:
+    pip install pycasso
 
-- Clone ``picasso.git`` via ``git clone --recurse-submodules https://github.com/jasonge27/picasso.git``
-- Make sure you have `setuptools <https://pypi.python.org/pypi/setuptools>`__
-- Run ``sudo make Pyinstall`` command.
+Install from source::
 
-
-Install from source file (Github) with CMAKE:
-
-- Clone ``picasso.git`` via ``git clone --recurse-submodules https://github.com/jasonge27/picasso.git``
-- Make sure you have `setuptools <https://pypi.python.org/pypi/setuptools>`__
-- Build the source file first via the ``cmake`` with ``CMakeLists.txt`` in the root directory. (You will see a ``.so`` or ``.lib`` file under ``(root)/lib/`` )
-- Run ``cd python-package; sudo python setup.py install`` command.
-
-
-Install from PyPI:
-
-- ``pip install pycasso``
-- **Note**: Owing to the setting on different OS, our distribution might not be working in your environment (especially in **Windows**). Thus please build from source.
-
-You can test if the package has been successfully installed by:
-
-.. code-block:: python
-
-        import pycasso
-        pycasso.test()
-
-..
+    git clone https://github.com/jasonge27/picasso.git
+    cd picasso
+    mkdir build && cd build && cmake .. && make
+    cd ../python-package
+    pip install .
 
 Usage
 -----
 
 .. code-block:: python
 
-        import pycasso
-        x = [[1,2,3,4,5,0],[3,4,1,7,0,1],[5,6,2,1,4,0]]
-        y = [3.1,6.9,11.3]
-        s = pycasso.Solver(x,y)
-        s.train()
-        s.predict()
+    import numpy as np
+    import pycasso
+
+    # Generate example data
+    n, d = 200, 50
+    X = np.random.randn(n, d)
+    beta_true = np.zeros(d)
+    beta_true[:3] = [1, -0.5, 0.3]
+    y = X @ beta_true + np.random.randn(n) * 0.5
+
+    # Fit sparse linear regression with Lasso
+    s = pycasso.Solver(X, y, family="gaussian", penalty="l1")
+    s.train()
+    result = s.coef()
+    print(result['beta'])     # coefficient matrix (nlambda x d)
+    print(result['intercept'])  # intercept for each lambda
+
+    # Predict
+    y_pred = s.predict(X[:5, :])
+
+    # Logistic regression with MCP penalty
+    y_bin = (np.random.rand(n) < 0.5).astype(float)
+    s2 = pycasso.Solver(X, y_bin, family="binomial", penalty="mcp")
+    s2.train()
+
+    # Early stopping with dfmax
+    s3 = pycasso.Solver(X, y, family="gaussian", dfmax=10)
+    s3.train()
 
 ..
 
-For Developer
--------------
-Please follow the `sphinx syntax style
-<https://thomas-cokelaer.info/tutorials/sphinx/docstring_python.html>`__
+Reference
+---------
 
-To update the document: ``cd doc; make html``
+Jason Ge, Xingguo Li, Haoming Jiang, Han Liu, Tong Zhang, Mengdi Wang, and Tuo Zhao.
+"Picasso: A Sparse Learning Library for High Dimensional Data Analysis in R and Python."
+*Journal of Machine Learning Research*, 20(44):1-5, 2019.
 
-Copy Right
-----------
+License
+-------
 
-:Author: Jason Ge, Haoming Jiang
-:Maintainer: Haoming Jiang <jianghm@gatech.edu>
+GPL-3.0

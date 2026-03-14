@@ -10,7 +10,8 @@ picasso.logit <- function(X,
                           intercept = TRUE,
                           prec = 1e-4,
                           max.ite = 1e4,
-                          verbose = FALSE)
+                          verbose = FALSE,
+                          offset = NULL)
 {
   dims = .picasso_validate_design(X)
   n = dims$n
@@ -47,10 +48,11 @@ picasso.logit <- function(X,
   gamma = method.info$gamma
   
   dfmax.int <- if (is.null(dfmax)) as.integer(-1) else as.integer(dfmax)
+  offset.vec <- if (is.null(offset)) rep(0.0, n) else as.double(offset)
 
   out = logit_solver(yy, xx, lambda, nlambda, gamma,
               n, d, max.ite, prec, intercept, verbose,
-              method.flag, dfmax.int)
+              method.flag, dfmax.int, offset.vec)
   
   # truncate to actual number of lambdas fit (early stopping)
   num.fit = out$num.fit
@@ -65,7 +67,6 @@ picasso.logit <- function(X,
   scaled = .picasso_rescale_solution(beta.raw, out$intcpt, standardize, xinvc.vec, xm)
 
   runt = Sys.time()-begt
-  est$runt = out$runt
   est$beta = Matrix(scaled$beta)
   est$intercept = scaled$intercept
   est$lambda = lambda
@@ -77,6 +78,11 @@ picasso.logit <- function(X,
   est$ite =out$ite
   est$verbose = verbose
   est$runtime = runt
+
+  est$nulldev <- .picasso_null_deviance(Yb, "binomial")
+  fit_dev <- .picasso_fit_deviance(Yb, X, as.matrix(est$beta), est$intercept, "binomial")
+  est$dev.ratio <- pmax(0, pmin(1, 1 - fit_dev / est$nulldev))
+
   class(est) = "logit"
   return(est)
 }
@@ -96,14 +102,28 @@ coef.logit <- function(object, lambda.idx = c(1:3), beta.idx = c(1:3), ...)
   .picasso_extract_coef(object, lambda.idx, beta.idx)
 }
 
-predict.logit <- function(object, newdata, lambda.idx = c(1:3), p.pred.idx = c(1:5), ...)
+predict.logit <- function(object, newdata, lambda.idx = c(1:3), p.pred.idx = c(1:5),
+                          type = "response", s = NULL, ...)
 {
+  if (type == "class") {
+    probs <- .picasso_predict(
+      object, newdata, lambda.idx, p.pred.idx,
+      default_response_idx = c(1:5),
+      transform = function(z) exp(z) / (1 + exp(z)),
+      type = "response",
+      s = s
+    )
+    return(matrix(as.integer(probs > 0.5), nrow = nrow(probs),
+                  dimnames = list(NULL, colnames(probs))))
+  }
   .picasso_predict(
     object,
     newdata,
     lambda.idx,
     p.pred.idx,
     default_response_idx = c(1:5),
-    transform = function(z) exp(z) / (1 + exp(z))
+    transform = function(z) exp(z) / (1 + exp(z)),
+    type = type,
+    s = s
   )
 }

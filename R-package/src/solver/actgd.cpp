@@ -113,7 +113,9 @@ void ActGDSolver::solve() {
       }
     }
 
-    m_obj->intercept_update();
+    if (m_param.include_intercept) {
+      m_obj->intercept_update();
+    }
 
     solution_path.push_back(m_obj->get_model_param_ref());
     runtime_path[i] = 0.0;
