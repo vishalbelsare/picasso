@@ -70,6 +70,11 @@ picasso.sqrtlasso <- function(X,
   est$ite =out$ite
   est$verbose = verbose
   est$runtime = runt
+
+  est$nulldev <- .picasso_null_deviance(as.numeric(Y), "sqrtlasso")
+  fit_dev <- .picasso_fit_deviance(as.numeric(Y), X, as.matrix(est$beta), est$intercept, "sqrtlasso")
+  est$dev.ratio <- pmax(0, pmin(1, 1 - fit_dev / est$nulldev))
+
   class(est) = "sqrtlasso"
   return(est)
 }
@@ -89,13 +94,16 @@ coef.sqrtlasso <- function(object, lambda.idx = c(1:3), beta.idx = c(1:3), ...)
   .picasso_extract_coef(object, lambda.idx, beta.idx)
 }
 
-predict.sqrtlasso <- function(object, newdata, lambda.idx = c(1:3), Y.pred.idx = c(1:5), ...)
+predict.sqrtlasso <- function(object, newdata, lambda.idx = c(1:3), Y.pred.idx = c(1:5),
+                              type = "response", s = NULL, ...)
 {
   .picasso_predict(
     object,
     newdata,
     lambda.idx,
     Y.pred.idx,
-    default_response_idx = c(1:5)
+    default_response_idx = c(1:5),
+    type = type,
+    s = s
   )
 }

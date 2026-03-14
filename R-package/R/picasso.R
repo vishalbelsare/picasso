@@ -13,9 +13,10 @@ picasso <- function(X,
                     intercept = TRUE,
                     prec = 1e-7,
                     max.ite = 1e3,
-                    verbose = FALSE)
+                    verbose = FALSE,
+                    offset = NULL)
 {
-  supported.family = c("gaussian", "binomial", "poisson", "sqrtlasso")
+  supported.family = c("gaussian", "binomial", "poisson", "sqrtlasso", "multinomial")
   if (!(family %in% supported.family)) {
     stop(sprintf(
       "Invalid `family`: %s. Must be one of: %s.",
@@ -40,16 +41,17 @@ picasso <- function(X,
   } else if (family == "binomial") {
     if(!is.matrix(Y))
       Y = as.matrix(Y)
-    
+
     out = picasso.logit(X = X, Y = Y, lambda = lambda, nlambda = nlambda,
                         lambda.min.ratio = lambda.min.ratio,
                         method = method, gamma = gamma, dfmax = dfmax,
                         standardize = standardize, intercept=intercept,
-                        prec = prec, max.ite = max.ite, verbose = verbose)
+                        prec = prec, max.ite = max.ite, verbose = verbose,
+                        offset = offset)
   } else if (family == "sqrtlasso"){
     if(!is.matrix(Y))
       Y = as.matrix(Y)
-    
+
     out = picasso.sqrtlasso(X = X, Y = Y, lambda = lambda, nlambda = nlambda,
                         lambda.min.ratio = lambda.min.ratio,
                         method = method, gamma = gamma, dfmax = dfmax,
@@ -62,7 +64,14 @@ picasso <- function(X,
                        standardize = standardize,
                        intercept = intercept,
                        prec = prec, max.ite = max.ite,
-                       verbose = verbose)
+                       verbose = verbose,
+                       offset = offset)
+  } else if (family == "multinomial") {
+    out = picasso.multinomial(X = X, Y = Y, lambda = lambda, nlambda = nlambda,
+                              lambda.min.ratio = lambda.min.ratio,
+                              method = method, gamma = gamma, dfmax = dfmax,
+                              standardize = standardize, intercept = intercept,
+                              prec = prec, max.ite = max.ite, verbose = verbose)
   }
   out$family = family
   return(out)

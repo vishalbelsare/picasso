@@ -40,7 +40,6 @@ void GLMObjective::intercept_update() {
   double sum_r = r.sum();
   model_param.intercept += sum_r/sum_w;
   r = r - sum_r/sum_w * w;
-  sum_r = 0;
 }
 
 void GLMObjective::update_gradient(int idx) {
@@ -73,7 +72,7 @@ LogisticObjective::LogisticObjective(const double *xmat, const double *y, int n,
 };
 
 void LogisticObjective::update_auxiliary() {
-  p = -model_param.intercept - Xb;
+  p = -(model_param.intercept + Xb + m_offset);
   p = p.exp();
   p = 1.0 / (1.0 + p);
   r = Y - p;
@@ -84,10 +83,12 @@ void LogisticObjective::update_auxiliary() {
 
 double LogisticObjective::eval() {
   double v = 0.0;
-  for (int i = 0; i < n; i++) v -= Y[i] * (model_param.intercept + Xb[i]);
+  for (int i = 0; i < n; i++)
+    v -= Y[i] * (model_param.intercept + Xb[i] + m_offset[i]);
 
   for (int i = 0; i < n; i++)
-    if (p[i] > 1e-8) v -= (log(p[i]) - model_param.intercept - Xb[i]);
+    if (p[i] > 1e-8)
+      v -= (log(p[i]) - model_param.intercept - Xb[i] - m_offset[i]);
 
   return (v / n);
 }
@@ -106,7 +107,7 @@ PoissonObjective::PoissonObjective(const double *xmat, const double *y, int n,
 };
 
 void PoissonObjective::update_auxiliary() {
-  p = model_param.intercept + Xb;
+  p = model_param.intercept + Xb + m_offset;
   p = p.exp();
   r = Y - p;
   w = p;
@@ -116,7 +117,7 @@ void PoissonObjective::update_auxiliary() {
 double PoissonObjective::eval() {
   double v = 0.0;
   for (int i = 0; i < n; i++)
-    v = v + p[i] - Y[i] * (model_param.intercept + Xb[i]);
+    v = v + p[i] - Y[i] * (model_param.intercept + Xb[i] + m_offset[i]);
   return (v / n);
 }
 

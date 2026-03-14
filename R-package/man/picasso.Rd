@@ -7,8 +7,8 @@ Fit Sparse Regression Models with Convex and Non-Convex Penalties
 
 \description{
 \code{picasso} fits regularization paths for sparse Gaussian, logistic
-(\code{family = "binomial"}), Poisson, and sqrt-lasso models using lasso,
-MCP, or SCAD penalties.
+(\code{family = "binomial"}), Poisson, sqrt-lasso, and multinomial models
+using lasso, MCP, or SCAD penalties.
 }
 
 \usage{
@@ -16,7 +16,8 @@ picasso(X, Y, lambda = NULL, nlambda = 100, lambda.min.ratio =
                  0.05, family = "gaussian", method = "l1",
                  type.gaussian = "naive", gamma = 3, df = NULL,
                  dfmax = NULL, standardize = TRUE, intercept = TRUE,
-                 prec = 1e-07, max.ite = 1000, verbose = FALSE)
+                 prec = 1e-07, max.ite = 1000, verbose = FALSE,
+                 offset = NULL)
 }
 
 \arguments{
@@ -51,7 +52,8 @@ picasso(X, Y, lambda = NULL, nlambda = 100, lambda.min.ratio =
 
   \item{family}{
   Model family. Supported values are \code{"gaussian"}, \code{"binomial"},
-  \code{"poisson"}, and \code{"sqrtlasso"}. The default is \code{"gaussian"}.
+  \code{"poisson"}, \code{"sqrtlasso"}, and \code{"multinomial"}.
+  The default is \code{"gaussian"}.
   }
 
   \item{method}{
@@ -106,6 +108,12 @@ picasso(X, Y, lambda = NULL, nlambda = 100, lambda.min.ratio =
   If \code{TRUE}, print tracing information during fitting.
   The default is \code{FALSE}.
   }
+
+  \item{offset}{
+  Optional numeric vector of length \eqn{n} added to the linear predictor
+  before the link function. Supported for \code{family = "binomial"} and
+  \code{family = "poisson"}. Pass \code{NULL} (default) for no offset.
+  }
 }
 \details{
 When \code{lambda} is not supplied, \code{picasso} constructs a logarithmically
@@ -133,16 +141,20 @@ Loss functions by family are:
 
 \value{
 A fitted object of class \code{"gaussian"}, \code{"logit"},
-\code{"poisson"}, or \code{"sqrtlasso"} depending on \code{family}.
+\code{"poisson"}, \code{"sqrtlasso"}, or \code{"multinomial"} depending on
+\code{family}.
 
 Common components include:
 \describe{
-  \item{beta}{Sparse matrix of fitted coefficients. Columns correspond to
-  regularization parameters in the solution path.}
+  \item{beta}{Sparse matrix (or list of sparse matrices for \code{"multinomial"})
+  of fitted coefficients. Columns correspond to regularization parameters.}
   \item{intercept}{Intercept values along the solution path.}
   \item{lambda}{Regularization sequence used for fitting.}
   \item{nlambda}{Number of regularization values.}
   \item{df}{Degrees of freedom (number of nonzero coefficients) along the path.}
+  \item{nulldev}{Null-model deviance (intercept-only fit).}
+  \item{dev.ratio}{Fraction of null deviance explained at each lambda,
+  analogous to \eqn{R^2}. Values range from 0 to 1.}
   \item{method}{Penalty type used for fitting.}
   \item{ite}{Iteration information returned by the solver.}
   \item{verbose}{Input \code{verbose} value.}
@@ -257,8 +269,8 @@ print(fitted.l1$intercept[i])
 ## Visualize the solution path
 plot(fitted.l1)
 
-## Estimate of Bernoulli parameters
-param.l1 = fitted.l1$p
+## Predicted probabilities for the first 5 observations at lambda[30]
+param.l1 = predict(fitted.l1, X, lambda.idx = 30, type = "response")
 
 
 ################################################################
